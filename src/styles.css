@@ -1,4 +1,4 @@
-.logo.vanilla:hover {
+/* .logo.vanilla:hover {
   filter: drop-shadow(0 0 2em #ffe21c);
 }
 :root {
@@ -109,4 +109,27 @@ button {
   button:active {
     background-color: #0f0f0f69;
   }
+} */
+
+body {
+  margin: 0;
+}
+
+main {
+  margin: 0;
+}
+
+p {
+  margin: 0;
+}
+
+#rotation-values {
+  margin: 1rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.rotation-value-row {
+  display: flex;
+  gap: 1rem;
 }
