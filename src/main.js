@@ -1,9 +1,18 @@
-const { invoke } = window.__TAURI__.core;
+const { invoke, Channel } = window.__TAURI__.core;
 
 let devicesEl;
+let rotationEl;
 
 async function startMain() {
-  // await invoke("telemetry", {});
+
+  const onEvent = new Channel();
+  const decoder = new TextDecoder();
+  onEvent.onmessage = (msgBytes) => {
+    const message = decoder.decode(msgBytes);
+    rotationEl.innerHTML = message;
+  };
+
+  await invoke("telemetry", { onEvent });
 }
 
 async function stopMain() {
@@ -17,7 +26,7 @@ async function toggleConnection(event) {
       await invoke("disconnect", {});
       deviceEl.dataset.connected = "false";
       deviceEl.style.backgroundColor = "white";
-      stopMain();
+      await stopMain();
     } catch (error) {
       deviceEl.style.backgroundColor = "red";
     }
@@ -26,7 +35,7 @@ async function toggleConnection(event) {
       await invoke("connect", { addrStr: deviceEl.dataset.addrStr });
       deviceEl.dataset.connected = "true";
       deviceEl.style.backgroundColor = "lightblue";
-      startMain();
+      await startMain();
     } catch (error) {
       deviceEl.style.backgroundColor = "red";
     }
@@ -52,10 +61,12 @@ async function scan() {
   }
 }
 
+
 window.addEventListener("DOMContentLoaded", () => {
   devicesEl = document.querySelector("#devices");
-  document.querySelector("#scan").addEventListener("click", (e) => {
+  rotationEl = document.querySelector("#rotation");
+  document.querySelector("#scan").addEventListener("click", async (e) => {
     e.preventDefault();
-    scan();
+    await scan();
   });
 });
