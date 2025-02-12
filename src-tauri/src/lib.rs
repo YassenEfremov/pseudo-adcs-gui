@@ -49,7 +49,7 @@ async fn scan(state: State<'_, Mutex<Settings>>) -> Result<Vec<(String, String)>
         let props_opt = peripheral.properties().await.unwrap();
         if let Some(props) = props_opt {
             names_addresses.push(
-                (props.local_name.unwrap_or(String::from("unknown")),
+                (props.local_name.unwrap_or(String::new()),
                 props.address.to_string())
             );
         }
@@ -139,9 +139,24 @@ async fn telemetry(state: State<'_, Mutex<Settings>>, on_event: Channel) -> Resu
                     y += (my_frame.get_y() as i32)/200;
                     z += (my_frame.get_z() as i32)/200;
                     // println!("{} {} {} ({})", x/50, y/50, z/50, my_frame.to_string());
-                    on_event.send(InvokeResponseBody::Raw(format!(
-                        "{} {} {} ({})",
-                        x/50, y/50, z/50, my_frame.to_string()
+                    on_event.send(InvokeResponseBody::Raw(format!(r#"
+                        {{
+                            "x": {{
+                                "angle": {},
+                                "acc": {}
+                            }},
+                            "y": {{
+                                "angle": {},
+                                "acc": {}
+                            }},
+                            "z": {{
+                                "angle": {},
+                                "acc": {}
+                            }}
+                        }}"#,
+                        x/50, my_frame.get_x(),
+                        y/50, my_frame.get_y(),
+                        z/50, my_frame.get_y()
                     ).into())).unwrap();
                     tail = 0;
                 }

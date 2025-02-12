@@ -10,34 +10,62 @@
 
   <body>
     <div id="settings">
-      <p>Devices:</p>
-      <button id="scan">scan</button>
+      <div id="settings-top">
+        <h3>Devices</h3>
+        <button id="scan">scan</button>
+      </div>
       <div id="devices"></div>
     </div>
     <main>
+      <div id="main-placeholder">
+        <p>Select a device</p>
+        <p>to see data</p>
+      </div>
+      <div id="main-hidden">
+        <div id="visual-data">
+          <div id="three-dim-view">
+            3D view soon
+          </div>
+        </div>
+        <div id="numerical-data">
+          <div id="angles">
+            <h4>angles</h4>
+            <div class="value-row">
+              <p>x:</p>
+              <p id="angle-x">0</p>
+            </div>
+            <div class="value-row">
+              <p>y:</p>
+              <p id="angle-y">0</p>
+            </div>
+            <div class="value-row">
+              <p>z:</p>
+              <p id="angle-z">0</p>
+            </div>
+          </div>
+          <div id="accs">
+            <h4>accs</h4>
+            <div class="value-row">
+              <p>x:</p>
+              <p id="acc-x">0</p>
+            </div>
+            <div class="value-row">
+              <p>y:</p>
+              <p id="acc-y">0</p>
+            </div>
+            <div class="value-row">
+              <p>z:</p>
+              <p id="acc-z">0</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- <form class="row" id="greet-form">
         <input id="greet-input" placeholder="Enter a name..." />
         <button type="submit">Greet</button>
       </form>
       <p id="greet-msg"></p> -->
-
-      <div class="row">
-        <div id="rotation-values">
-          <div class="rotation-value-row">
-            <!-- <p>x: </p> -->
-            <p id="rotation">0</p>
-          </div>
-          <!-- <div class="rotation-value-row">
-            <p>y: </p>
-            <p id="rotation-y">0</p>
-          </div>
-          <div class="rotation-value-row">
-            <p>z: </p>
-            <p id="rotation-z">0</p>
-          </div> -->
-        </div>
-      </div>
-
     </main>
   </body>
 </html>

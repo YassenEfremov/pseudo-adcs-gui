@@ -122,29 +122,105 @@ body {
   display: flex;
   flex-direction: column;
   flex: 1;
+  gap: 1rem;
   padding: 1rem;
-  background-color: lightgray;
+  background-color: #d3d3d3;
+}
+
+#settings-top {
+  display: flex;
+  justify-content: space-between;
+
+  h3 {
+    margin: 0;
+  }
 }
 
 #devices {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.device-button {
+  display: flex;
+  flex-direction: column;
+  border: none;
+  border-radius: 0.3rem;
+  background-color: #c3c3c3;
+
+  h4 {
+    margin: 0;
+    text-align: start;
+  }
+
+  p {
+    color: gray;
+  }
+}
+
+.device-button:hover {
+  background-color: #b3b3b3;
+}
+.device-button:active {
+  background-color: #a3a3a3;
 }
 
 main {
   display: flex;
-  flex-grow: 4;
+  justify-content: center;
+  align-items: center;
+  flex: 4;
 }
 
-#rotation-values {
+#main-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: gray;
+}
+
+#main-hidden {
+  display: none;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+}
+
+#visual-data {
+  display: flex;
+  flex: 2;
+  justify-content: center;
+  align-items: center;
+}
+
+#three-dim-view {
+
+}
+
+#numerical-data {
+  display: flex;
+  flex: 1;
+  justify-content: center;
+}
+
+#angles {
+  min-width: 8rem;
   display: flex;
   flex-direction: column;
   padding: 1rem;
   border: 1px solid blue;
 }
 
-.rotation-value-row {
+#accs {
+  min-width: 8rem;
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+  border: 1px solid blue;
+}
+
+.value-row {
   display: flex;
   gap: 1rem;
 }
