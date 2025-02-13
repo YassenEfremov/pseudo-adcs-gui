@@ -1,6 +1,14 @@
 const { invoke, Channel } = window.__TAURI__.core;
 
-let devicesEl;
+let devicesEl = document.querySelector("#devices-hidden");
+let devicesPlaceholderEl = document.querySelector("#devices-placeholder");
+let devicesLoadingEl = document.querySelector("#devices-loading");
+let devicesErrorEl = document.querySelector("#devices-error");
+
+let mainEl = document.querySelector("#main-hidden");
+let mainPlaceholderEl = document.querySelector("#main-placeholder");
+let mainLoadingEl = document.querySelector("#main-loading");
+let mainErrorEl = document.querySelector("#main-error");
 
 /**
  * Create a button for a device
@@ -24,10 +32,8 @@ function createDeviceEl(name, address) {
     deviceNameEl.innerHTML = "unknown";
     deviceNameEl.style.color = "gray";
   }
-  deviceNameEl.style.pointerEvents = "none";
   let deviceAddrEl = document.createElement("p");
   deviceAddrEl.innerHTML = address;
-  deviceAddrEl.style.pointerEvents = "none";
 
   deviceEl.appendChild(deviceNameEl);
   deviceEl.appendChild(deviceAddrEl);
@@ -36,9 +42,6 @@ function createDeviceEl(name, address) {
 
 
 async function startMain() {
-  document.querySelector("#main-placeholder").style.display = "none";
-  document.querySelector("#main-hidden").style.display = "flex";
-
   const onEvent = new Channel();
   const textDecoder = new TextDecoder();
   let angleXEl = document.querySelector("#angle-x");
@@ -47,7 +50,7 @@ async function startMain() {
   let accXEl = document.querySelector("#acc-x");
   let accYEl = document.querySelector("#acc-y");
   let accZEl = document.querySelector("#acc-z");
-  onEvent.onmessage = (msgBytes) => {
+  onEvent.onmessage = async (msgBytes) => {
     const values = JSON.parse(textDecoder.decode(msgBytes));
     console.log(values);
     angleXEl.innerHTML = values.x.angle;
@@ -67,24 +70,38 @@ async function stopMain() {
 
 async function toggleConnection(event) {
   let deviceEl = event.target;
+  mainErrorEl.style.display = "none";
   if (deviceEl.dataset.connected == "true") {
     try {
+      mainEl.style.display = "none";
+      mainLoadingEl.style.display = "block";
       await invoke("disconnect", {});
       deviceEl.dataset.connected = "false";
-      deviceEl.style.backgroundColor = "white";
+      deviceEl.classList.remove("device-button-connected");
+      deviceEl.classList.add("device-button");
+
+      mainLoadingEl.style.display = "none";
+      mainPlaceholderEl.style.display = "flex";
       await stopMain();
     } catch (error) {
-      deviceEl.style.backgroundColor = "red";
+      mainLoadingEl.style.display = "none";
+      mainErrorEl.style.display = "block";
     }
   } else {
     try {
+      mainPlaceholderEl.style.display = "none";
+      mainLoadingEl.style.display = "block";
       await invoke("connect", { addrStr: deviceEl.dataset.addrStr });
       deviceEl.dataset.connected = "true";
-      deviceEl.style.backgroundColor = "lightblue";
-      deviceEl.style.border = "2px solid white";
+      deviceEl.classList.remove("device-button");
+      deviceEl.classList.add("device-button-connected");
+
+      mainLoadingEl.style.display = "none";
+      mainEl.style.display = "flex";
       await startMain();
     } catch (error) {
-      deviceEl.style.backgroundColor = "red";
+      mainLoadingEl.style.display = "none";
+      mainErrorEl.style.display = "block";
     }
   }
 }
@@ -92,7 +109,12 @@ async function toggleConnection(event) {
 async function scan() {
   devicesEl.innerHTML = "";
   try {
+    devicesEl.style.display = "none";
+    devicesPlaceholderEl.style.display = "none";
+    devicesLoadingEl.style.display = "block";
     let devices = await invoke("scan", {});
+    devicesLoadingEl.style.display = "none";
+    devicesEl.style.display = "flex";
     for (const [name, addrStr] of devices) {
       let deviceEl = createDeviceEl(name, addrStr)
       deviceEl.dataset.addrStr = addrStr;
@@ -101,15 +123,16 @@ async function scan() {
       devicesEl.appendChild(deviceEl);
     }
   } catch (error) {
-    let errEl = document.createElement("p");
-    errEl.innerHTML = "BL not enabled or not supported";
-    devicesEl.appendChild(errEl);
+    // let errEl = document.createElement("p");
+    // errEl.innerHTML = "BL not enabled or not supported";
+    // devices.appendChild(errEl);
+    devicesLoadingEl.style.display = "none";
+    devicesErrorEl.style.display = "block";
   }
 }
 
 
 window.addEventListener("DOMContentLoaded", () => {
-  devicesEl = document.querySelector("#devices");
   document.querySelector("#scan").addEventListener("click", async (e) => {
     e.preventDefault();
     await scan();

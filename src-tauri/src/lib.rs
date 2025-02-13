@@ -13,7 +13,7 @@ use uuid::Uuid;
 mod my_frame;
 
 
-const MAIN_CHARACTERISTIC: Uuid = uuid_from_u16(0xFFE1);
+const NOTIFY_WRITE_CHARAC_UUID: Uuid = uuid_from_u16(0xFFE1);
 
 
 #[derive(Default)]
@@ -81,12 +81,16 @@ async fn connect(state: State<'_, Mutex<Settings>>, addr_str: String) -> Result<
     }
 
     device.discover_services().await;
-    let chars = device.characteristics();
-    let main_char = chars.iter().find(|c|
-        c.uuid == MAIN_CHARACTERISTIC
-    ).unwrap();
-    // settings.main_characteristic = Some(main_char.clone());
-    device.subscribe(main_char).await;
+    let characteristics = device.characteristics();
+    if let Some(notify_write_charac) = characteristics.iter().find(|c|
+        c.uuid == NOTIFY_WRITE_CHARAC_UUID
+    ) {
+        // settings.main_characteristic = Some(main_char.clone());
+        device.subscribe(notify_write_charac).await;
+    } else {
+        device.disconnect().await;
+        return Err(())
+    }
 
     settings.connected_device = Some(device.clone());   // not ideal :/
 

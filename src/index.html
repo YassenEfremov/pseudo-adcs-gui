@@ -14,12 +14,26 @@
         <h3>Devices</h3>
         <button id="scan">scan</button>
       </div>
-      <div id="devices"></div>
+      <div id="devices">
+        <div id="devices-placeholder">
+          <p>Press "scan"</p>
+          <p>to see devices</p>
+        </div>
+        <div id="devices-loading" class="loading"></div>
+        <div id="devices-error">
+          <p>Error while scanning</p>
+        </div>
+        <div id="devices-hidden"></div>
+      </div>
     </div>
     <main>
       <div id="main-placeholder">
         <p>Select a device</p>
         <p>to see data</p>
+      </div>
+      <div id="main-loading" class="loading"></div>
+      <div id="main-error">
+        <p>Error while connecting</p>
       </div>
       <div id="main-hidden">
         <div id="visual-data">

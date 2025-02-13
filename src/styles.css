@@ -111,11 +111,22 @@ button {
   }
 } */
 
+.loading {
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
 
 body {
   display: flex;
   margin: 0;
   height: 100vh;
+  min-width: 100px;
+  min-height: 100px;
 }
 
 #settings {
@@ -130,6 +141,7 @@ body {
 #settings-top {
   display: flex;
   justify-content: space-between;
+  gap: 1rem;
 
   h3 {
     margin: 0;
@@ -138,8 +150,38 @@ body {
 
 #devices {
   display: flex;
+  justify-content: center;
+  align-items: center;
+  flex: 1;
+  overflow: auto;
+}
+
+#devices-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: gray;
+}
+
+#devices-loading {
+  display: none;
+  border: 0.3rem solid #f3f3f3;
+  border-top: 0.3rem solid lightblue;
+  width: 3rem;
+  height: 3rem;
+}
+
+#devices-error {
+  display: none;
+  color: lightcoral;
+}
+
+#devices-hidden {
+  display: none;
   flex-direction: column;
   gap: 0.5rem;
+  width: 100%;
+  height: 100%;
 }
 
 .device-button {
@@ -152,10 +194,12 @@ body {
   h4 {
     margin: 0;
     text-align: start;
+    pointer-events: none;
   }
 
   p {
     color: gray;
+    pointer-events: none;
   }
 }
 
@@ -164,6 +208,33 @@ body {
 }
 .device-button:active {
   background-color: #a3a3a3;
+}
+
+.device-button-connected {
+  display: flex;
+  flex-direction: column;
+  border: 2px solid white;
+  border-radius: 0.3rem;
+  background-color: lightblue;
+
+  h4 {
+    margin: 0;
+    text-align: start;
+    pointer-events: none;
+  }
+
+  p {
+    color: blue;
+    pointer-events: none;
+  }
+}
+
+.device-button-connected:hover {
+  background-color: #a0d0e0;
+}
+
+.device-button-connected:active {
+  background-color: #90c0d0;
 }
 
 main {
@@ -178,6 +249,19 @@ main {
   flex-direction: column;
   align-items: center;
   color: gray;
+}
+
+#main-loading {
+  display: none;
+  border: 0.5rem solid #f3f3f3;
+  border-top: 0.5rem solid lightblue;
+  width: 5rem;
+  height: 5rem;
+}
+
+#main-error {
+  display: none;
+  color: lightcoral;
 }
 
 #main-hidden {
