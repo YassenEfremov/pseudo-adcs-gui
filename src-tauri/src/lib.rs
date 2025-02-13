@@ -116,62 +116,57 @@ async fn disconnect(state: State<'_, Mutex<Settings>>) -> Result<(), ()> {
 #[tauri::command]
 async fn telemetry(state: State<'_, Mutex<Settings>>, on_event: Channel) -> Result<String, ()> {
 
-    let mut settings = state.lock().await;
+    let mut notif_stream;
+    
+    {
+        let settings = state.lock().await;
+        if let Some(connected_device) = &settings.connected_device {
+            notif_stream = connected_device.notifications().await.unwrap();
+        } else {
+            return Err(());
+        }
+    }
 
     let mut x: i32 = 0;
     let mut y: i32 = 0;
     let mut z: i32 = 0;
 
-    if let Some(connected_device) = &settings.connected_device {
-
-        // connected_device.discover_services().await;
-        // let chars = connected_device.characteristics();
-        // let main_char = chars.iter().find(|c|
-        //     c.uuid == MAIN_CHARACTERISTIC
-        // ).unwrap();
-        // // settings.main_characteristic = Some(main_char.clone());
-        // connected_device.subscribe(main_char).await;
-
-        let mut notif_stream = connected_device.notifications().await.unwrap();
-        let mut buffer: [u8; size_of::<MyFrame>()] = [0x00; size_of::<MyFrame>()];
-        let mut tail: usize = 0;
-        while let Some(data) = notif_stream.next().await {
-            for byte in data.value {
-                if tail == buffer.len() {
-                    let my_frame = MyFrame::from_fixed(&buffer);
-                    x += (my_frame.get_x() as i32)/200;
-                    y += (my_frame.get_y() as i32)/200;
-                    z += (my_frame.get_z() as i32)/200;
-                    // println!("{} {} {} ({})", x/50, y/50, z/50, my_frame.to_string());
-                    on_event.send(InvokeResponseBody::Raw(format!(r#"
-                        {{
-                            "x": {{
-                                "angle": {},
-                                "acc": {}
-                            }},
-                            "y": {{
-                                "angle": {},
-                                "acc": {}
-                            }},
-                            "z": {{
-                                "angle": {},
-                                "acc": {}
-                            }}
-                        }}"#,
-                        x/50, my_frame.get_x(),
-                        y/50, my_frame.get_y(),
-                        z/50, my_frame.get_y()
-                    ).into())).unwrap();
-                    tail = 0;
-                }
-                buffer[tail] = byte;
-                tail += 1;
+    let mut buffer = [0x00; size_of::<MyFrame>()];
+    let mut tail: usize = 0;
+    while let Some(data) = notif_stream.next().await {
+        for byte in data.value {
+            if tail == buffer.len() {
+                let my_frame = MyFrame::from_fixed(&buffer);
+                x += (my_frame.get_x() as i32)/200;
+                y += (my_frame.get_y() as i32)/200;
+                z += (my_frame.get_z() as i32)/200;
+                // println!("{} {} {} ({})", x/50, y/50, z/50, my_frame.to_string());
+                on_event.send(InvokeResponseBody::Raw(format!(r#"
+                    {{
+                        "x": {{
+                            "angle": {},
+                            "acc": {}
+                        }},
+                        "y": {{
+                            "angle": {},
+                            "acc": {}
+                        }},
+                        "z": {{
+                            "angle": {},
+                            "acc": {}
+                        }}
+                    }}"#,
+                    x/50, my_frame.get_x(),
+                    y/50, my_frame.get_y(),
+                    z/50, my_frame.get_y()
+                ).into())).unwrap();
+                tail = 0;
             }
+            buffer[tail] = byte;
+            tail += 1;
         }
-        Ok("".into())
-    } else {
-        Err(())
     }
+    Ok("".into())
 }
 
 
