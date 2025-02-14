@@ -1,16 +1,14 @@
 use btleplug::api::bleuuid::uuid_from_u16;
-use btleplug::api::{BDAddr, Central, Characteristic, Manager as _, Peripheral as _, ScanFilter};
+use btleplug::api::{BDAddr, Central, Characteristic, Manager as _, Peripheral as _, ScanFilter, WriteType};
 use btleplug::platform::Peripheral;
 
 use futures::StreamExt;
-use my_frame::MyFrame;
+use pseudo_adcs_protocol::data_format::MyFrame;
 use tauri::ipc::{Channel, InvokeResponseBody};
 use tauri::{Manager, State};
 use tokio::sync::Mutex;
 use tokio::time::{sleep, Duration};
 use uuid::Uuid;
-
-mod my_frame;
 
 
 const NOTIFY_WRITE_CHARAC_UUID: Uuid = uuid_from_u16(0xFFE1);
@@ -64,9 +62,9 @@ async fn connect(state: State<'_, Mutex<Settings>>, addr_str: String) -> Result<
     let mut settings = state.lock().await;
 
     if let Some(connected_device) = &settings.connected_device {
-        // if connected_device.address().to_string() == addr_str {
-        //     return Err(());
-        // } else {
+        if connected_device.address().to_string() == addr_str {
+            return Err(());
+        }// else {
         //     disconnect(state);
         // }
         return Err(());
@@ -82,17 +80,19 @@ async fn connect(state: State<'_, Mutex<Settings>>, addr_str: String) -> Result<
 
     device.discover_services().await;
     let characteristics = device.characteristics();
-    if let Some(notify_write_charac) = characteristics.iter().find(|c|
+    let notify_write_charac: &Characteristic;
+    if let Some(charac) = characteristics.iter().find(|c|
         c.uuid == NOTIFY_WRITE_CHARAC_UUID
     ) {
-        // settings.main_characteristic = Some(main_char.clone());
+        notify_write_charac = charac;
         device.subscribe(notify_write_charac).await;
     } else {
         device.disconnect().await;
         return Err(())
     }
 
-    settings.connected_device = Some(device.clone());   // not ideal :/
+    settings.connected_device = Some(device.clone());
+    settings.main_characteristic = Some(notify_write_charac.clone());
 
     Ok(())
 }
@@ -134,6 +134,11 @@ async fn telemetry(state: State<'_, Mutex<Settings>>, on_event: Channel) -> Resu
     let mut buffer = [0x00; size_of::<MyFrame>()];
     let mut tail: usize = 0;
     while let Some(data) = notif_stream.next().await {
+        let settings = state.lock().await;
+        if let None = settings.connected_device {
+            // device could be disconnected while we wait for data
+            break;
+        }
         for byte in data.value {
             if tail == buffer.len() {
                 let my_frame = MyFrame::from_fixed(&buffer);
@@ -169,6 +174,22 @@ async fn telemetry(state: State<'_, Mutex<Settings>>, on_event: Channel) -> Resu
     Ok("".into())
 }
 
+// #[tauri::command]
+// async fn set_attitude(state: State<'_, Mutex<Settings>>, new_x: i32, new_y: i32, new_z: i32) -> Result<(), String> {
+
+//     let settings = state.lock().await;
+//     if let Some(connected_device) = &settings.connected_device {
+//         if let Some(charac) = &settings.main_characteristic {
+
+//             connected_device.write(&charac, &[0x01], WriteType::WithoutResponse).await;
+//         }
+//     } else {
+//         return Err("".into());
+//     }
+
+//     Ok(())
+// }
+
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -183,6 +204,7 @@ pub fn run() {
             connect,
             disconnect,
             telemetry,
+            // set_attitude
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

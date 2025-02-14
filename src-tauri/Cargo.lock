@@ -3033,6 +3033,7 @@ version = "0.1.0"
 dependencies = [
  "btleplug",
  "futures",
+ "pseudo-adcs-protocol",
  "serde",
  "serde_json",
  "tauri",
@@ -3041,6 +3042,11 @@ dependencies = [
  "tokio",
  "uuid",
 ]
+
+[[package]]
+name = "pseudo-adcs-protocol"
+version = "0.1.0"
+source = "git+https://github.com/YassenEfremov/pseudo-adcs-protocol#05969347c0cee66b33830b5d5d1bf10826869e28"
 
 [[package]]
 name = "quick-xml"
