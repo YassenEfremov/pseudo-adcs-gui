@@ -127,10 +127,6 @@ async fn telemetry(state: State<'_, Mutex<Settings>>, on_event: Channel) -> Resu
         }
     }
 
-    let mut x: i32 = 0;
-    let mut y: i32 = 0;
-    let mut z: i32 = 0;
-
     let mut message = Message::new();
 
     while let Some(data) = notif_stream.next().await {
@@ -142,9 +138,6 @@ async fn telemetry(state: State<'_, Mutex<Settings>>, on_event: Channel) -> Resu
         for byte in data.value {
             if let PushState::Done = message.push_byte(byte) {
                 if let Some(MessagePayload::TEL(ref tel_payload)) = message.payload {
-                    x += (tel_payload.get_x() as i32)/500;
-                    y += (tel_payload.get_y() as i32)/500;
-                    z += (tel_payload.get_z() as i32)/500;
                     // println!("{} {} {} ()", x/20, y/20, z/20, /*my_frame.to_string()*/);
                     on_event.send(InvokeResponseBody::Raw(format!(r#"
                         {{
@@ -161,9 +154,9 @@ async fn telemetry(state: State<'_, Mutex<Settings>>, on_event: Channel) -> Resu
                                 "acc": {}
                             }}
                         }}"#,
-                        x/20, tel_payload.get_x(),
-                        y/20, tel_payload.get_y(),
-                        z/20, tel_payload.get_y()
+                        tel_payload.get_x(), tel_payload.get_x_acc(),
+                        tel_payload.get_y(), tel_payload.get_y_acc(),
+                        tel_payload.get_z(), tel_payload.get_z_acc()
                     ).into())).unwrap();
                 }
             }

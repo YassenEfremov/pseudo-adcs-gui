@@ -3046,7 +3046,7 @@ dependencies = [
 [[package]]
 name = "pseudo-adcs-protocol"
 version = "0.1.0"
-source = "git+https://github.com/YassenEfremov/pseudo-adcs-protocol#34dcce1f8caec6e9f89b1a55bc304ce307382250"
+source = "git+https://github.com/YassenEfremov/pseudo-adcs-protocol#8bc440d79f09a941be9ed45402e658b829d6e46f"
 
 [[package]]
 name = "quick-xml"
