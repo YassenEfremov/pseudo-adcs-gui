@@ -1,3 +1,4 @@
+// import * as THREE from 'three';
 const { invoke, Channel } = window.__TAURI__.core;
 
 let devicesEl = document.querySelector("#devices-hidden");
@@ -9,6 +10,10 @@ let mainEl = document.querySelector("#main-hidden");
 let mainPlaceholderEl = document.querySelector("#main-placeholder");
 let mainLoadingEl = document.querySelector("#main-loading");
 let mainErrorEl = document.querySelector("#main-error");
+
+const inputXEl = document.querySelector("#input-x");
+const inputYEl = document.querySelector("#input-y");
+const inputZEl = document.querySelector("#input-z");
 
 /**
  * Create a button for a device
@@ -64,9 +69,9 @@ async function startMain() {
   await invoke("telemetry", { onEvent });
 }
 
-async function stopMain() {
+// async function stopMain() {
 
-}
+// }
 
 async function toggleConnection(event) {
   let deviceEl = event.target;
@@ -82,7 +87,7 @@ async function toggleConnection(event) {
 
       mainLoadingEl.style.display = "none";
       mainPlaceholderEl.style.display = "flex";
-      await stopMain();
+      // await stopMain();
     } catch (error) {
       mainLoadingEl.style.display = "none";
       mainErrorEl.style.display = "block";
@@ -123,12 +128,17 @@ async function scan() {
       devicesEl.appendChild(deviceEl);
     }
   } catch (error) {
-    // let errEl = document.createElement("p");
-    // errEl.innerHTML = "BL not enabled or not supported";
-    // devices.appendChild(errEl);
     devicesLoadingEl.style.display = "none";
     devicesErrorEl.style.display = "block";
   }
+}
+
+async function setAttitude() {
+  const newX = parseInt(inputXEl.value);
+  const newY = parseInt(inputYEl.value);
+  const newZ = parseInt(inputZEl.value);
+
+  await invoke("set_attitude", { newX: newX, newY: newY, newZ: newZ });
 }
 
 
@@ -137,4 +147,33 @@ window.addEventListener("DOMContentLoaded", () => {
     e.preventDefault();
     await scan();
   });
+
+  document.querySelector("#attitude-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    await setAttitude();
+  });
+
+  // const scene = new THREE.Scene();
+  // const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
+  
+  // const renderer = new THREE.WebGLRenderer();
+  // renderer.setSize( window.innerWidth, window.innerHeight );
+  // // renderer.setAnimationLoop( animate );
+  // document.querySelector("#three-dim-view").appendChild( renderer.domElement );
+  
+  // const geometry = new THREE.BoxGeometry( 1, 1, 1 );
+  // const material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
+  // const cube = new THREE.Mesh( geometry, material );
+  // scene.add( cube );
+  
+  // camera.position.z = 5;
+  
+  // function animate() {
+  
+  //   cube.rotation.x += 0.01;
+  //   cube.rotation.y += 0.01;
+  
+  //   renderer.render( scene, camera );
+  
+  // }
 });

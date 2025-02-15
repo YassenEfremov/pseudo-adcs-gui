@@ -3,7 +3,7 @@ use btleplug::api::{BDAddr, Central, Characteristic, Manager as _, Peripheral as
 use btleplug::platform::Peripheral;
 
 use futures::StreamExt;
-use pseudo_adcs_protocol::data_format::MyFrame;
+use pseudo_adcs_protocol::message::TEL;
 use tauri::ipc::{Channel, InvokeResponseBody};
 use tauri::{Manager, State};
 use tokio::sync::Mutex;
@@ -131,8 +131,11 @@ async fn telemetry(state: State<'_, Mutex<Settings>>, on_event: Channel) -> Resu
     let mut y: i32 = 0;
     let mut z: i32 = 0;
 
-    let mut buffer = [0x00; size_of::<MyFrame>()];
-    let mut tail: usize = 0;
+    let mut header_buffer: [u8; 1] = [0x00];
+    let mut header_tail: usize = 0;
+    let mut payload_started: bool = false;
+    let mut payload_buffer: [u8; size_of::<TEL>()] = [0x00; size_of::<TEL>()];
+    let mut payload_tail: usize = 0;
     while let Some(data) = notif_stream.next().await {
         let settings = state.lock().await;
         if let None = settings.connected_device {
@@ -140,55 +143,90 @@ async fn telemetry(state: State<'_, Mutex<Settings>>, on_event: Channel) -> Resu
             break;
         }
         for byte in data.value {
-            if tail == buffer.len() {
-                let my_frame = MyFrame::from_fixed(&buffer);
-                x += (my_frame.get_x() as i32)/200;
-                y += (my_frame.get_y() as i32)/200;
-                z += (my_frame.get_z() as i32)/200;
-                // println!("{} {} {} ({})", x/50, y/50, z/50, my_frame.to_string());
-                on_event.send(InvokeResponseBody::Raw(format!(r#"
-                    {{
-                        "x": {{
-                            "angle": {},
-                            "acc": {}
-                        }},
-                        "y": {{
-                            "angle": {},
-                            "acc": {}
-                        }},
-                        "z": {{
-                            "angle": {},
-                            "acc": {}
-                        }}
-                    }}"#,
-                    x/50, my_frame.get_x(),
-                    y/50, my_frame.get_y(),
-                    z/50, my_frame.get_y()
-                ).into())).unwrap();
-                tail = 0;
+            if header_tail < header_buffer.len() {
+                header_buffer[0] = byte;
+                header_tail += 1;
             }
-            buffer[tail] = byte;
-            tail += 1;
+            match header_buffer[0] {
+                0x01 => {
+                    if payload_started {
+                        payload_buffer[payload_tail] = byte;
+                        payload_tail += 1;
+
+                        if payload_tail == payload_buffer.len() {
+                            // for b in payload_buffer {
+                            //     print!("{} ", b);
+                            // }
+                            // println!("");
+    
+                            let tel_payload = TEL::from_fixed(&payload_buffer);
+                            x += (tel_payload.get_x() as i32)/500;
+                            y += (tel_payload.get_y() as i32)/500;
+                            z += (tel_payload.get_z() as i32)/500;
+                            // println!("{} {} {} ()", x/20, y/20, z/20, /*my_frame.to_string()*/);
+                            on_event.send(InvokeResponseBody::Raw(format!(r#"
+                                {{
+                                    "x": {{
+                                        "angle": {},
+                                        "acc": {}
+                                    }},
+                                    "y": {{
+                                        "angle": {},
+                                        "acc": {}
+                                    }},
+                                    "z": {{
+                                        "angle": {},
+                                        "acc": {}
+                                    }}
+                                }}"#,
+                                x/20, tel_payload.get_x(),
+                                y/20, tel_payload.get_y(),
+                                z/20, tel_payload.get_y()
+                            ).into())).unwrap();
+                            header_tail = 0;
+                            payload_tail = 0;
+                            payload_started = false;
+                        }
+                    } else {
+                        payload_started = true;
+                    }
+                },
+                0x03 => {
+                    // trigger event?
+                    println!("NAS");
+                    header_tail = 0;
+                },
+                _ => {
+                    header_tail = 0;
+                }
+            }
         }
     }
     Ok("".into())
 }
 
-// #[tauri::command]
-// async fn set_attitude(state: State<'_, Mutex<Settings>>, new_x: i32, new_y: i32, new_z: i32) -> Result<(), String> {
+#[tauri::command]
+async fn set_attitude(state: State<'_, Mutex<Settings>>, new_x: i32, new_y: i32, new_z: i32) -> Result<(), String> {
 
-//     let settings = state.lock().await;
-//     if let Some(connected_device) = &settings.connected_device {
-//         if let Some(charac) = &settings.main_characteristic {
+    let settings = state.lock().await;
+    if let Some(connected_device) = &settings.connected_device {
+        if let Some(charac) = &settings.main_characteristic {
+            let bytes = [
+                0x02,
+                (new_x as i16).to_be_bytes()[0], (new_x as i16).to_be_bytes()[1],
+                (new_y as i16).to_be_bytes()[0], (new_y as i16).to_be_bytes()[1],
+                (new_z as i16).to_be_bytes()[0], (new_z as i16).to_be_bytes()[1],
+            ];
+            println!("sending: {:?}", bytes);
+            // connected_device.write(&charac, &[0x02], WriteType::WithoutResponse).await;
+            connected_device.write(&charac, &bytes, WriteType::WithoutResponse).await;
+        }
+    } else {
+        return Err("".into());
+    }
 
-//             connected_device.write(&charac, &[0x01], WriteType::WithoutResponse).await;
-//         }
-//     } else {
-//         return Err("".into());
-//     }
-
-//     Ok(())
-// }
+    Ok(())
+}
 
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -204,7 +242,7 @@ pub fn run() {
             connect,
             disconnect,
             telemetry,
-            // set_attitude
+            set_attitude
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

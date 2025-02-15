@@ -121,6 +121,10 @@ button {
   100% { transform: rotate(360deg); }
 }
 
+p {
+  margin: 0;
+}
+
 body {
   display: flex;
   margin: 0;
@@ -288,12 +292,21 @@ main {
   justify-content: center;
 }
 
+.value-row {
+  display: flex;
+  gap: 1rem;
+}
+
 #angles {
   min-width: 8rem;
   display: flex;
   flex-direction: column;
   padding: 1rem;
-  border: 1px solid blue;
+  border: 1px solid gray;
+
+  h4 {
+    margin: 0;
+  }
 }
 
 #accs {
@@ -301,14 +314,21 @@ main {
   display: flex;
   flex-direction: column;
   padding: 1rem;
-  border: 1px solid blue;
+  border: 1px solid gray;
+
+  h4 {
+    margin: 0;
+  }
 }
 
-.value-row {
+#control {
+  min-width: 8rem;
   display: flex;
-  gap: 1rem;
-}
+  flex-direction: column;
+  padding: 1rem;
+  border: 1px solid gray;
 
-p {
-  margin: 0;
+  h4 {
+    margin: 0;
+  }
 }

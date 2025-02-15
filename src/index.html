@@ -38,12 +38,13 @@
       <div id="main-hidden">
         <div id="visual-data">
           <div id="three-dim-view">
-            3D view soon
+            <!-- 3D view soon -->
           </div>
         </div>
         <div id="numerical-data">
           <div id="angles">
             <h4>angles</h4>
+            <br/>
             <div class="value-row">
               <p>x:</p>
               <p id="angle-x">0</p>
@@ -59,6 +60,7 @@
           </div>
           <div id="accs">
             <h4>accs</h4>
+            <br/>
             <div class="value-row">
               <p>x:</p>
               <p id="acc-x">0</p>
@@ -72,14 +74,27 @@
               <p id="acc-z">0</p>
             </div>
           </div>
+          <div id="control">
+            <h4>set target attitude</h4>
+            <br/>
+            <form id="attitude-form">
+              <div class="value-row">
+                <p>x:</p>
+                <input id="input-x" type="number" placeholder="0"/>
+              </div>
+              <div class="value-row">
+                <p>y:</p>
+                <input id="input-y" type="number" placeholder="0"/>
+              </div>
+              <div class="value-row">
+                <p>z:</p>
+                <input id="input-z" type="number" placeholder="0"/>
+              </div>
+              <button type="submit">Set</button>
+            </form>
+          </div>
         </div>
       </div>
-
-      <!-- <form class="row" id="greet-form">
-        <input id="greet-input" placeholder="Enter a name..." />
-        <button type="submit">Greet</button>
-      </form>
-      <p id="greet-msg"></p> -->
     </main>
   </body>
 </html>
