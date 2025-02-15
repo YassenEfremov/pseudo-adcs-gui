@@ -3,7 +3,7 @@ use btleplug::api::{BDAddr, Central, Characteristic, Manager as _, Peripheral as
 use btleplug::platform::Peripheral;
 
 use futures::StreamExt;
-use pseudo_adcs_protocol::message::TEL;
+use pseudo_adcs_protocol::message::{Message, MessagePayload, PushState, TEL};
 use tauri::ipc::{Channel, InvokeResponseBody};
 use tauri::{Manager, State};
 use tokio::sync::Mutex;
@@ -131,11 +131,8 @@ async fn telemetry(state: State<'_, Mutex<Settings>>, on_event: Channel) -> Resu
     let mut y: i32 = 0;
     let mut z: i32 = 0;
 
-    let mut header_buffer: [u8; 1] = [0x00];
-    let mut header_tail: usize = 0;
-    let mut payload_started: bool = false;
-    let mut payload_buffer: [u8; size_of::<TEL>()] = [0x00; size_of::<TEL>()];
-    let mut payload_tail: usize = 0;
+    let mut message = Message::new();
+
     while let Some(data) = notif_stream.next().await {
         let settings = state.lock().await;
         if let None = settings.connected_device {
@@ -143,61 +140,31 @@ async fn telemetry(state: State<'_, Mutex<Settings>>, on_event: Channel) -> Resu
             break;
         }
         for byte in data.value {
-            if header_tail < header_buffer.len() {
-                header_buffer[0] = byte;
-                header_tail += 1;
-            }
-            match header_buffer[0] {
-                0x01 => {
-                    if payload_started {
-                        payload_buffer[payload_tail] = byte;
-                        payload_tail += 1;
-
-                        if payload_tail == payload_buffer.len() {
-                            // for b in payload_buffer {
-                            //     print!("{} ", b);
-                            // }
-                            // println!("");
-    
-                            let tel_payload = TEL::from_fixed(&payload_buffer);
-                            x += (tel_payload.get_x() as i32)/500;
-                            y += (tel_payload.get_y() as i32)/500;
-                            z += (tel_payload.get_z() as i32)/500;
-                            // println!("{} {} {} ()", x/20, y/20, z/20, /*my_frame.to_string()*/);
-                            on_event.send(InvokeResponseBody::Raw(format!(r#"
-                                {{
-                                    "x": {{
-                                        "angle": {},
-                                        "acc": {}
-                                    }},
-                                    "y": {{
-                                        "angle": {},
-                                        "acc": {}
-                                    }},
-                                    "z": {{
-                                        "angle": {},
-                                        "acc": {}
-                                    }}
-                                }}"#,
-                                x/20, tel_payload.get_x(),
-                                y/20, tel_payload.get_y(),
-                                z/20, tel_payload.get_y()
-                            ).into())).unwrap();
-                            header_tail = 0;
-                            payload_tail = 0;
-                            payload_started = false;
-                        }
-                    } else {
-                        payload_started = true;
-                    }
-                },
-                0x03 => {
-                    // trigger event?
-                    println!("NAS");
-                    header_tail = 0;
-                },
-                _ => {
-                    header_tail = 0;
+            if let PushState::Done = message.push_byte(byte) {
+                if let Some(MessagePayload::TEL(ref tel_payload)) = message.payload {
+                    x += (tel_payload.get_x() as i32)/500;
+                    y += (tel_payload.get_y() as i32)/500;
+                    z += (tel_payload.get_z() as i32)/500;
+                    // println!("{} {} {} ()", x/20, y/20, z/20, /*my_frame.to_string()*/);
+                    on_event.send(InvokeResponseBody::Raw(format!(r#"
+                        {{
+                            "x": {{
+                                "angle": {},
+                                "acc": {}
+                            }},
+                            "y": {{
+                                "angle": {},
+                                "acc": {}
+                            }},
+                            "z": {{
+                                "angle": {},
+                                "acc": {}
+                            }}
+                        }}"#,
+                        x/20, tel_payload.get_x(),
+                        y/20, tel_payload.get_y(),
+                        z/20, tel_payload.get_y()
+                    ).into())).unwrap();
                 }
             }
         }

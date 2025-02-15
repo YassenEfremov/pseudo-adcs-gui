@@ -3046,7 +3046,7 @@ dependencies = [
 [[package]]
 name = "pseudo-adcs-protocol"
 version = "0.1.0"
-source = "git+https://github.com/YassenEfremov/pseudo-adcs-protocol#f970debe7bdc718aa25327fb11e8df1903d0e267"
+source = "git+https://github.com/YassenEfremov/pseudo-adcs-protocol#34dcce1f8caec6e9f89b1a55bc304ce307382250"
 
 [[package]]
 name = "quick-xml"
@@ -3699,9 +3699,9 @@ dependencies = [
 
 [[package]]
 name = "smallvec"
-version = "1.13.2"
+version = "1.14.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3c5e1a9a646d36c3599cd173a41282daf47c44583ad367b8e6837255952e5c67"
+checksum = "7fcf8323ef1faaee30a44a340193b1ac6814fd9b7b4e88e9d4519a3e4abe1cfd"
 
 [[package]]
 name = "socket2"
